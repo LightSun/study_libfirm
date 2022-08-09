@@ -1,0 +1,88 @@
+\ -*- forth -*-
+\ Use firmforth primitives to define more words from the CORE section
+\ of the ANS94 standard.
+\
+\ The early definitions look very inelegant, but they get better as
+\ the language is extended and becomes more usable.  Libfirm's
+\ optimizations do a pretty good job at removing lots of the apparent
+\ inefficiencies in these definitions.
+
+: 1+ 1 + ;
+
+: invert 1+ negate ;
+
+: - negate + ;
+: 1- -1 + ;
+
+: 0= ( x1 -- flag )
+	if 0 else 1 then ;
+
+: < ( x1 x2 -- flag )
+	1- > 0= ;
+
+: 2drop ( a b -- )
+  drop drop ;
+
+: dup ( a -- a a )
+  0 pick ;
+
+: over ( x1 x2 -- x1 x2 x1 )
+	1 pick ;
+
+: 2dup ( x1 x2 -- x1 x2 x1 x2 )
+  over over ;
+
+: 2over ( x1 x2 x3 x4 -- x1 x2 x3 x4 x1 x2 )
+  3 pick 3 pick ;
+
+: '
+  word find drop  \ TODO: ignores error code
+;
+  
+: postpone
+  '
+  [ ' compile, ] compile, \ cannot use postpone while defining it
+; immediate
+
+: while postpone if ; immediate
+
+: ?dup dup if dup then ;
+
+: 2* 1 lshift ;
+: 2/ 1 rshift ;
+
+: constant
+  postpone :
+  postpone literal
+  postpone ;
+;
+
+: variable
+  postpone :
+  1 cells allocate drop
+  postpone literal
+  postpone ;
+;
+
+: tuck
+  swap 1 pick ;
+
+: +!
+  tuck @ + swap ! ;
+
+: cr
+  10 emit ;
+
+\ words from the TOOLS word set of the standard
+
+: ?
+  @ . ;
+
+: .s
+  depth
+  begin
+    ?dup while
+    dup pick . 1-
+  repeat
+  cr
+;
